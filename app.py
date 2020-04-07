@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request, Response
 
-app = Flask(__name__)
+from bookModel import *
+from settings import *
+import json
 
 books = [
     {
@@ -57,5 +59,60 @@ def get_book_by_isbn(isbn):
 
     return jsonify(return_val)
 
+#PUT
+@app.route('/books/<int:isbn>', methods=['PUT'])
+def replace_book(isbn):
+    req = request.get_json()
+    new_book = {
+        "name": req['name'],
+        "price": req['price'],
+        "isbn": isbn
+    }
+    
+    i=0
+    for book in books:
+        if book['isbn'] == isbn:
+            books[i] = new_book
+        i+=1
+        
+    return Response('', 204)
+
+#PATCH
+@app.route('/books/<int:isbn>', methods=['PATCH'])
+def update_book(isbn):
+    req = request.get_json()
+    updated_book = {}
+    if 'name' in req:
+        updated_book["name"] =  req['name']
+    if 'price' in req:
+        updated_book["price"]= req['price']
+    
+    for book in books:
+        if book['isbn'] == isbn:
+            book.update(updated_book)
+        
+    res = Response('', status=204)
+    res.headers['Location'] = '/books/' + str(isbn)
+    return res
+
+#DELETE
+@app.route('/books/<int:isbn>', methods=['DELETE'])
+def delete_book(isbn):
+    
+    i=0
+    for book in books:
+        if book['isbn'] == isbn:
+            books.pop(i)
+            return Response('', 204)
+        i+=1
+    return Response('', status=404, mimetype='application/json')
 
 app.run(port=5000) 
+
+
+
+
+
+
+
+
